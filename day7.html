@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>User Tracker App</title>
+  </head>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #74ebd5, #acb6e5);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: "Arial", sans-serif;
+    }
+
+    .container {
+      background-color: white;
+      padding: 30px 50px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    button {
+      background-color: #ff5c5c;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #e60000;
+    }
+  </style>
+  <body>
+    <div class="container">
+      <h1 id="greeting"></h1>
+      <button id="resetBtn">Reset</button>
+    </div>
+
+    <script>
+      if (!Array.prototype.includes) {
+        Array.prototype.includes = function (element, fromIndex = 0) {
+          for (let i = fromIndex; i < this.length; i++) {
+            if (this[i] === element) return true;
+          }
+          return false;
+        };
+      }
+
+      function User(name) {
+        this.name = name;
+      }
+
+      function Visitor(name, visitCount) {
+        User.call(this, name); // inherit name
+        this.visitCount = visitCount;
+      }
+
+      Visitor.prototype = Object.create(User.prototype);
+      Visitor.prototype.constructor = Visitor;
+
+      // ===== 3. Cookies: Helpers =====
+      function setCookie(name, value, days) {
+        const date = new Date();
+        date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+        document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/`;
+      }
+
+      function getCookie(name) {
+        const cookies = document.cookie.split("; ");
+        for (const cookie of cookies) {
+          const [key, value] = cookie.split("=");
+          if (key === name) return value;
+        }
+        return null;
+      }
+
+      function deleteCookie(name) {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+      }
+
+      function askUsername() {
+        let username = localStorage.getItem("username");
+        if (!username) {
+          username = prompt("Enter your name:");
+          if (username) {
+            localStorage.setItem("username", username);
+          }
+        }
+        return username;
+      }
+
+      function getVisitCount() {
+        let visitCount = parseInt(getCookie("visitCount")) || 0;
+        visitCount++;
+        setCookie("visitCount", visitCount, 7); // 7 days expiry
+        return visitCount;
+      }
+
+      function getSuffix(count) {
+        if (count % 100 >= 11 && count % 100 <= 13) return "th";
+        switch (count % 10) {
+          case 1:
+            return "st";
+          case 2:
+            return "nd";
+          case 3:
+            return "rd";
+          default:
+            return "th";
+        }
+      }
+
+      function displayGreeting() {
+        const username = askUsername();
+        const visitCount = getVisitCount();
+
+        const visitor = new Visitor(username, visitCount);
+
+        const greetingElement = document.getElementById("greeting");
+        const suffix = getSuffix(visitor.visitCount);
+
+        greetingElement.textContent = `Hello ${visitor.name}, this is your ${visitor.visitCount}${suffix} visit!`;
+      }
+
+      document
+        .getElementById("resetBtn")
+        .addEventListener("click", function () {
+          localStorage.removeItem("username");
+          deleteCookie("visitCount");
+          location.reload();
+        });
+
+      displayGreeting();
+    </script>
+  </body>
+</html>
